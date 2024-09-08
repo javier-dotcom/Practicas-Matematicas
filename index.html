@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Práctica de Operaciones Matemáticas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: auto;
+        }
+        .operation {
+            margin-bottom: 10px;
+        }
+        .operation input {
+            width: 60px;
+        }
+        button {
+            margin: 10px 0;
+            padding: 10px;
+        }
+        #result {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        .incorrect-answer {
+            color: red;
+        }
+        .button{
+            border-radius: 9px;
+            background-color: rgba(0, 255, 255, 0.293);
+            border:solid 2px rgba(0, 0, 0, 0.459);
+        } 
+        .button:hover{
+            border-radius: 9px;
+            background-color: rgba(0, 255, 255, 0.793);
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>Práctica de Operaciones Matemáticas</h1>
+
+    <h3>Para 5 'C' Escuela Padre Cantilo</h3>
+
+    <label for="userName">Nombre del usuario:</label>
+    <input type="text" id="userName" placeholder="Introduce tu nombre" required>
+    <br><br>
+
+    <label for="operationType">Tipo de operación:</label>
+    <select id="operationType">
+        <option value="suma">Suma</option>
+        <option value="resta">Resta</option>
+        <option value="multiplicacion">Multiplicación</option>
+        <option value="division">División</option>
+    </select>
+    <br><br>
+
+    <label for="numCount">Cantidad de operaciones a generar:</label>
+    <input type="number" id="numCount" min="1" max="100" value="10">
+    <br><br>
+
+    <label for="num1Digits">Cantidad de Cifras primer número:</label> <br>
+    <input type="number" id="num1Digits" min="1" max="5" value="2">
+    <br><br>
+
+    <label for="num2Digits">Cantidad de Cifras segundo número:</label>
+    <input type="number" id="num2Digits" min="1" max="5" value="2">
+    <br><br>
+
+    <button class="button" onclick="generateOperations()">Generar Operaciones</button>
+
+    <form id="operationsForm" onsubmit="return evaluateResults()">
+        <div id="operationsContainer"></div>
+        <button class="button" type="submit">Corregir</button>
+    </form>
+
+    <div class="modal fade" id="resultModal" aria-hidden="true" aria-labelledby="resultModalLabel" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h1 class="modal-title fs-5" id="resultModalLabel">Resultados</h1>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="modalResultBody">
+              <!-- Aquí se mostrarán los resultados -->
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+    <script>
+        function generateRandomNumber(digits) {
+            const min = Math.pow(10, digits - 1);
+            const max = Math.pow(10, digits) - 1;
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function generateOperations() {
+            const operationType = document.getElementById('operationType').value;
+            const numCount = document.getElementById('numCount').value;
+            const num1Digits = document.getElementById('num1Digits').value;
+            const num2Digits = document.getElementById('num2Digits').value;
+            
+            const operationsContainer = document.getElementById('operationsContainer');
+            operationsContainer.innerHTML = '';  // Limpiar operaciones previas
+
+            for (let i = 0; i < numCount; i++) {
+                let num1 = generateRandomNumber(num1Digits);
+                let num2 = generateRandomNumber(num2Digits);
+
+                // Asegurar que en la resta, num1 >= num2
+                if (operationType === 'resta' && num1 < num2) {
+                    [num1, num2] = [num2, num1];  // Intercambiar si num1 es menor
+                }
+
+                // Asegurar que en la división, num1 >= num2 y que num2 no sea 0
+                if (operationType === 'division') {
+                    while (num2 === 0) {
+                        num2 = generateRandomNumber(num2Digits);  // Evitar divisor 0
+                    }
+                    if (num1 < num2) {
+                        [num1, num2] = [num2, num1];  // Intercambiar si num1 es menor
+                    }
+                }
+
+                let symbol = '';
+                switch (operationType) {
+                    case 'suma': symbol = '+'; break;
+                    case 'resta': symbol = '-'; break;
+                    case 'multiplicacion': symbol = '×'; break;
+                    case 'division': symbol = '÷'; break;
+                }
+
+                const div = document.createElement('div');
+                div.className = 'operation';
+                div.innerHTML = `
+                    ${num1} ${symbol} ${num2} = 
+                    <input type="number" data-num1="${num1}" data-num2="${num2}" data-op="${operationType}" required>
+                `;
+                operationsContainer.appendChild(div);
+            }
+        }
+
+        function evaluateResults() {
+            const inputs = document.querySelectorAll('#operationsContainer input');
+            const userName = document.getElementById('userName').value;
+            
+            if (!userName) {
+                alert('Por favor, introduce tu nombre.');
+                return false;
+            }
+
+            let allFilled = true;
+            inputs.forEach(input => {
+                if (input.value === '') {
+                    allFilled = false;
+                }
+            });
+
+            if (!allFilled) {
+                alert('Por favor, completa todas las respuestas.');
+                return false;
+            }
+
+            let correct = 0;
+            let total = inputs.length;
+            let calificacion = '';
+            let incorrectAnswers = '';
+
+            inputs.forEach(input => {
+                const num1 = parseFloat(input.getAttribute('data-num1'));
+                const num2 = parseFloat(input.getAttribute('data-num2'));
+                const op = input.getAttribute('data-op');
+                let correctAnswer;
+
+                switch (op) {
+                    case 'suma':
+                        correctAnswer = num1 + num2;
+                        break;
+                    case 'resta':
+                        correctAnswer = num1 - num2;
+                        break;
+                    case 'multiplicacion':
+                        correctAnswer = num1 * num2;
+                        break;
+                    case 'division':
+                        correctAnswer = num1 / num2;
+                        break;
+                }
+
+                const userAnswer = parseFloat(input.value);
+                if (userAnswer === correctAnswer) {
+                    correct++;
+                } else {
+                    incorrectAnswers += `
+                        <p>${num1} ${getOperationSymbol(op)} ${num2} = 
+                        <span class="incorrect-answer">Tu respuesta: ${userAnswer}, Correcta: ${correctAnswer}</span></p>
+                    `;
+                }
+            });
+
+            const nota = (correct / total * 10).toFixed(1);
+
+            if (nota >= 9) {
+                calificacion = "¡EXCELENTE, sigue así!";
+            } else if (nota >= 7) {
+                calificacion = "¡MUY BIEN, buen trabajo!";
+            } else if (nota >= 5) {
+                calificacion = "¡Bien hecho, puedes mejorar aún más!";
+            } else {
+                calificacion = "No te preocupes, sigue practicando y mejorarás.";
+            }
+
+            const resultHtml = `
+                <p>${userName}, obtuviste ${correct} correctas de ${total}.</p>
+                <p>Nota: ${nota}</p>
+                <p>${calificacion}</p>
+                <hr>
+                <h5>Respuestas Incorrectas:</h5>
+                ${incorrectAnswers || '<p>Todas las respuestas son correctas.</p>'}
+            `;
+
+            document.getElementById('modalResultBody').innerHTML = resultHtml;
+
+            const resultModal = new bootstrap.Modal(document.getElementById('resultModal'));
+            resultModal.show();
+
+            return false;  // Evitar recarga de página
+        }
+
+        function getOperationSymbol(op) {
+            switch (op) {
+                case 'suma': return '+';
+                case 'resta': return '-';
+                case 'multiplicacion': return '×';
+                case 'division': return '÷';
+            }
+        }
+    </script>
+</body>
+</html>
