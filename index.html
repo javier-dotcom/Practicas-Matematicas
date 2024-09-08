@@ -29,16 +29,15 @@
         .incorrect-answer {
             color: red;
         }
-        .button{
+        .button {
             border-radius: 9px;
             background-color: rgba(0, 255, 255, 0.293);
-            border:solid 2px rgba(0, 0, 0, 0.459);
+            border: solid 2px rgba(0, 0, 0, 0.459);
         } 
-        .button:hover{
+        .button:hover {
             border-radius: 9px;
             background-color: rgba(0, 255, 255, 0.793);
         }
-
     </style>
 </head>
 <body>
@@ -145,7 +144,9 @@
                 div.className = 'operation';
                 div.innerHTML = `
                     ${num1} ${symbol} ${num2} = 
-                    <input type="number" data-num1="${num1}" data-num2="${num2}" data-op="${operationType}" required>
+                    
+                    <input type="number" data-num1="${num1}" data-num2="${num2}" data-op="${operationType}" step="any" required>
+
                 `;
                 operationsContainer.appendChild(div);
             }
@@ -199,12 +200,16 @@
                 }
 
                 const userAnswer = parseFloat(input.value);
-                if (userAnswer === correctAnswer) {
+                const correctAnswerRounded = correctAnswer.toFixed(2); // Redondear respuesta correcta a dos decimales
+                const userAnswerRounded = userAnswer.toFixed(2); // Redondear respuesta del usuario a dos decimales
+                const isCorrect = userAnswerRounded === correctAnswerRounded; // Comparar respuestas redondeadas
+
+                if (isCorrect) {
                     correct++;
                 } else {
                     incorrectAnswers += `
                         <p>${num1} ${getOperationSymbol(op)} ${num2} = 
-                        <span class="incorrect-answer">Tu respuesta: ${userAnswer}, Correcta: ${correctAnswer}</span></p>
+                        <span class="incorrect-answer">Tu respuesta: ${userAnswerRounded}, Correcta: ${correctAnswerRounded}</span></p>
                     `;
                 }
             });
@@ -214,28 +219,25 @@
             if (nota >= 9) {
                 calificacion = "¡EXCELENTE, sigue así!";
             } else if (nota >= 7) {
-                calificacion = "¡MUY BIEN, buen trabajo!";
+                calificacion = "¡BUEN TRABAJO!";
             } else if (nota >= 5) {
-                calificacion = "¡Bien hecho, puedes mejorar aún más!";
+                calificacion = "¡PUEDE MEJORAR!";
             } else {
-                calificacion = "No te preocupes, sigue practicando y mejorarás.";
+                calificacion = "¡NECESITAS ESTUDIAR MÁS!";
             }
 
-            const resultHtml = `
-                <p>${userName}, obtuviste ${correct} correctas de ${total}.</p>
+            document.getElementById('modalResultBody').innerHTML = `
+                <p><strong>${userName}</strong>, has respondido ${correct} de ${total} correctamente.</p>
                 <p>Nota: ${nota}</p>
                 <p>${calificacion}</p>
-                <hr>
-                <h5>Respuestas Incorrectas:</h5>
-                ${incorrectAnswers || '<p>Todas las respuestas son correctas.</p>'}
+                <p>Respuestas Incorrectas:</p>
+                ${incorrectAnswers}
             `;
-
-            document.getElementById('modalResultBody').innerHTML = resultHtml;
 
             const resultModal = new bootstrap.Modal(document.getElementById('resultModal'));
             resultModal.show();
 
-            return false;  // Evitar recarga de página
+            return false;  // Evitar el envío del formulario
         }
 
         function getOperationSymbol(op) {
@@ -244,8 +246,10 @@
                 case 'resta': return '-';
                 case 'multiplicacion': return '×';
                 case 'division': return '÷';
+                default: return '';
             }
         }
     </script>
+
 </body>
 </html>
