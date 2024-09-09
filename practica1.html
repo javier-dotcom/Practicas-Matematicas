@@ -138,17 +138,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 
     <script>
-        document.getElementById('operationType').addEventListener('change', function() {
-            const operationType = document.getElementById('operationType').value;
-            const num2DigitsInput = document.getElementById('num2Digits');
-        
-            if (operationType === 'division') {
-                num2DigitsInput.value = 1; // Limita automáticamente a una cifra
-                num2DigitsInput.max = 1;   // Establece el máximo de cifras en 1
-            } else {
-                num2DigitsInput.max = 5;   // Restablece el máximo de cifras a 5 para las otras operaciones
-            }
-        });
+       
         
         function generateRandomNumber(digits) {
             const min = Math.pow(10, digits - 1);
@@ -237,11 +227,11 @@
 
             return { evaluation, motivation };
         }
-
         function evaluateResults() {
             const userName = document.getElementById('userName').value;
             const inputs = document.querySelectorAll('#operationsContainer input');
-            const tolerance = 0.01;  // Tolerancia para otras operaciones (sin decimales en división)
+            const tolerance = 0.01;  // Tolerancia para otras operaciones
+            const decimalTolerance = 0.005;  // Tolerancia para comparación de decimales más precisa
         
             let correct = 0;
             let total = inputs.length;
@@ -269,18 +259,21 @@
                         break;
                 }
         
-                // Evaluar solo enteros para la división
+                // Evaluar la división con tolerancia para decimales
                 if (op === 'division') {
-                    if (Math.floor(userAnswer) === Math.floor(correctAnswer)) {
+                    const userAnswerRounded = Math.round(userAnswer * 100000) / 100000; // Redondear a 5 decimales
+                    const correctAnswerRounded = Math.round(correctAnswer * 100000) / 100000; // Redondear a 5 decimales
+                    
+                    if (Math.abs(userAnswerRounded - correctAnswerRounded) < decimalTolerance) {
                         correct++;
                     } else {
-                        incorrectAnswers += `<div class="highlight incorrect">Incorrecto: ${num1} ${getSymbol(op)} ${num2} = ${userAnswer} <span class="correct-answer"> <br> Corrección: ${num1} ${getSymbol(op)} ${num2} = ${Math.floor(correctAnswer)}</span></div><br>`;
+                        incorrectAnswers += `<div class="highlight incorrect">Incorrecto: ${num1} ${getSymbol(op)} ${num2} = ${userAnswer.toFixed(2)} <span class="correct-answer"> <br> Corrección: ${num1} ${getSymbol(op)} ${num2} = ${correctAnswer.toFixed(2)}</span></div><br>`;
                     }
                 } else {
                     if (Math.abs(userAnswer - correctAnswer) < tolerance) {
                         correct++;
                     } else {
-                        incorrectAnswers += `<div class="highlight incorrect">Incorrecto: ${num1} ${getSymbol(op)} ${num2} = ${userAnswer} <span class="correct-answer"> <br> Corrección: ${num1} ${getSymbol(op)} ${num2} = ${correctAnswer}</span></div><br>`;
+                        incorrectAnswers += `<div class="highlight incorrect">Incorrecto: ${num1} ${getSymbol(op)} ${num2} = ${userAnswer.toFixed(2)} <span class="correct-answer"> <br> Corrección: ${num1} ${getSymbol(op)} ${num2} = ${correctAnswer.toFixed(2)}</span></div><br>`;
                     }
                 }
             });
@@ -306,7 +299,8 @@
             return false; // Prevenir que el formulario se envíe
         }
         
-
+        
+        
         function getSymbol(operationType) {
             switch (operationType) {
                 case 'suma': return '+';

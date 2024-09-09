@@ -138,6 +138,17 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 
     <script>
+        document.getElementById('operationType').addEventListener('change', function() {
+            const operationType = document.getElementById('operationType').value;
+            const num2DigitsInput = document.getElementById('num2Digits');
+        
+            if (operationType === 'division') {
+                num2DigitsInput.value = 1; // Limita automáticamente a una cifra
+                num2DigitsInput.max = 1;   // Establece el máximo de cifras en 1
+            } else {
+                num2DigitsInput.max = 5;   // Restablece el máximo de cifras a 5 para las otras operaciones
+            }
+        });
         function generateRandomNumber(digits) {
             const min = Math.pow(10, digits - 1);
             const max = Math.pow(10, digits) - 1;
@@ -233,39 +244,20 @@
         
 
         function evaluateResults() {
-            const inputs = document.querySelectorAll('#operationsContainer input');
             const userName = document.getElementById('userName').value;
-            
-            if (!userName) {
-                alert('Por favor, introduce tu nombre.');
-                return false;
-            }
-        
-            let allFilled = true;
-            inputs.forEach(input => {
-                if (input.value === '') {
-                    allFilled = false;
-                }
-            });
-        
-            if (!allFilled) {
-                alert('Por favor, completa todas las respuestas.');
-                return false;
-            }
+            const inputs = document.querySelectorAll('#operationsContainer input');
+            const tolerance = 0.01;  // Tolerancia para otras operaciones (sin decimales en división)
         
             let correct = 0;
             let total = inputs.length;
             let incorrectAnswers = '';
-        
-            const tolerance = 0.01; // Tolerancia para divisiones decimales
         
             inputs.forEach(input => {
                 const num1 = parseFloat(input.getAttribute('data-num1'));
                 const num2 = parseFloat(input.getAttribute('data-num2'));
                 const op = input.getAttribute('data-op');
                 const userAnswer = parseFloat(input.value);
-        
-                let correctAnswer;
+                let correctAnswer = 0;
         
                 switch (op) {
                     case 'suma':
@@ -282,10 +274,19 @@
                         break;
                 }
         
-                if (Math.abs(userAnswer - correctAnswer) < tolerance) {
-                    correct++;
+                // Evaluar solo enteros para la división
+                if (op === 'division') {
+                    if (Math.floor(userAnswer) === Math.floor(correctAnswer)) {
+                        correct++;
+                    } else {
+                        incorrectAnswers += `<div class="highlight incorrect">Incorrecto: ${num1} ${getSymbol(op)} ${num2} = ${userAnswer} <span class="correct-answer"> <br> Corrección: ${num1} ${getSymbol(op)} ${num2} = ${Math.floor(correctAnswer)}</span></div><br>`;
+                    }
                 } else {
-                    incorrectAnswers += `<div class="highlight incorrect">Incorrectas ${num1} ${getSymbol(op)} ${num2} = ${userAnswer} <span class="correct-answer"> <br> Correción ${num1} + ${num2} = ${correctAnswer}</span></div><br>`;
+                    if (Math.abs(userAnswer - correctAnswer) < tolerance) {
+                        correct++;
+                    } else {
+                        incorrectAnswers += `<div class="highlight incorrect">Incorrecto: ${num1} ${getSymbol(op)} ${num2} = ${userAnswer} <span class="correct-answer"> <br> Corrección: ${num1} ${getSymbol(op)} ${num2} = ${correctAnswer}</span></div><br>`;
+                    }
                 }
             });
         
@@ -295,7 +296,7 @@
             const modalBody = document.getElementById('modalResultBody');
             modalBody.innerHTML = `
                 <div id="result" class="resultincorrect">
-                    <p><strong> ${userName}</strong></p>
+                    <p><strong>${userName}</strong></p>
                     <p>Respuestas Correctas: ${correct} de ${total}</p>
                     <p>Porcentaje Correcto: ${correctPercentage.toFixed(2)}%</p>
                     <p>${evaluation}</p>
@@ -305,86 +306,9 @@
             `;
         
             const resultModal = new bootstrap.Modal(document.getElementById('resultModal'));
-            resultModal.show();function evaluateResults() {
-    const inputs = document.querySelectorAll('#operationsContainer input');
-    const userName = document.getElementById('userName').value;
-    
-    if (!userName) {
-        alert('Por favor, introduce tu nombre.');
-        return false;
-    }
-
-    let allFilled = true;
-    inputs.forEach(input => {
-        if (input.value === '') {
-            allFilled = false;
-        }
-    });
-
-    if (!allFilled) {
-        alert('Por favor, completa todas las respuestas.');
-        return false;
-    }
-
-    let correct = 0;
-    let total = inputs.length;
-    let incorrectAnswers = '';
-
-    const tolerance = 0.01; // Tolerancia para divisiones decimales
-
-    inputs.forEach(input => {
-        const num1 = parseFloat(input.getAttribute('data-num1'));
-        const num2 = parseFloat(input.getAttribute('data-num2'));
-        const op = input.getAttribute('data-op');
-        const userAnswer = parseFloat(input.value);
-
-        let correctAnswer;
-
-        switch (op) {
-            case 'suma':
-                correctAnswer = num1 + num2;
-                break;
-            case 'resta':
-                correctAnswer = num1 - num2;
-                break;
-            case 'multiplicacion':
-                correctAnswer = num1 * num2;
-                break;
-            case 'division':
-                correctAnswer = num1 / num2;
-                break;
-        }
-
-        if (Math.abs(userAnswer - correctAnswer) < tolerance) {
-            correct++;
-        } else {
-            incorrectAnswers += `<div class="highlight incorrect">Incorrectas ${num1} ${getSymbol(op)} ${num2} = ${userAnswer} <span class="correct-answer"> <br> Correción(${correctAnswer})</span></div><br>`;
-        }
-    });
-
-    const correctPercentage = (correct / total) * 100;
-    const { evaluation, motivation } = getEvaluationText(correctPercentage);
-
-    const modalBody = document.getElementById('modalResultBody');
-    modalBody.innerHTML = `
-        <div id="result" class="resultincorrect">
-            <p><strong> ${userName}</strong></p>
-            <p>Respuestas Correctas: ${correct} de ${total}</p>
-            <p>Porcentaje Correcto: ${correctPercentage.toFixed(2)}%</p>
-            <p>${evaluation}</p>
-            <p>${motivation}</p>
-            ${incorrectAnswers}
-        </div>
-    `;
-
-    const resultModal = new bootstrap.Modal(document.getElementById('resultModal'));
-    resultModal.show();
-
-    return false;
-}
-
+            resultModal.show();
         
-            return false;
+            return false; // Prevenir que el formulario se envíe
         }
         
 
